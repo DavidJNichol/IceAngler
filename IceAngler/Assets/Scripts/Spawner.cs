@@ -17,6 +17,8 @@ public class Spawner : MonoBehaviour, ISpawner
     protected Quaternion spawnRotation;
     protected Vector3 spawnScale;
 
+    int offsetY;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -37,10 +39,12 @@ public class Spawner : MonoBehaviour, ISpawner
 
         marineObjects = new List<MarineObject>();
 
-        marineObjects.Add(new Eel());
+        marineObjects.Add(EelPrefab);
+        marineObjects.Add(SharkPrefab);
+        marineObjects.Add(BootPrefab);
 
-
-        Spawn(5);
+        for(int i = 0; i < 3; i++)
+            SpawnPrefab(GetMarineObjectToSpawn());
     }
 
     // Update is called once per frame
@@ -49,23 +53,23 @@ public class Spawner : MonoBehaviour, ISpawner
         
     }
 
-    private void Spawn(int numTypes) // consider abstract base class if we need to hide things.
+    private void Spawn(MarineObject prefab, int numTypes) // consider abstract base class if we need to hide things.
     {
         for(int i = 0; i < numTypes; i++)
         {
-            SpawnPrefab(EelPrefab, 1);
+            SpawnPrefab(prefab);
         }
     }
 
-    private void SpawnPrefab(MarineObject prefab, int count)
+    private void SpawnPrefab(MarineObject prefab)
     {
-        for(int i = 0; i < count; i++)
-            Instantiate<MarineObject>(prefab, this.transform.position, this.transform.rotation).IsActivated = true;
+        Instantiate(prefab, new Vector3(this.transform.position.x, this.transform.position.y + offsetY, this.transform.position.z), this.transform.rotation).IsActivated = true;
+        offsetY -= 100;
     }
 
     private MarineObject GetMarineObjectToSpawn()
     {
-
-        return null;
+        int randIndex = Random.Range(0, marineObjects.Count);
+        return marineObjects[randIndex];
     }
 }
