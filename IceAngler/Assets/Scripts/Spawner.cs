@@ -63,7 +63,13 @@ public class Spawner : MonoBehaviour, ISpawner
 
     private void SpawnPrefab(MarineObject prefab)
     {
-        Instantiate(prefab, new Vector3(this.transform.position.x, this.transform.position.y + offsetY, this.transform.position.z), this.transform.rotation).IsActivated = true;
+        MarineObject marineObject = ObjectPool.SharedInstance.GetPooledObject();
+
+        if (marineObject != null)
+        {
+            marineObject.transform.position = new Vector3(this.transform.position.x, this.transform.position.y + offsetY, this.transform.position.z);
+            marineObject.IsActivated = true;
+        }
         offsetY -= 100;
     }
 

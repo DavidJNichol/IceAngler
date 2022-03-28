@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class MarineObject : MonoBehaviour, IMarineObject
+public class MarineObject : MonoBehaviour, IMarineObject
 {
     public float MoveSpeed { get { return moveSpeed; } set { moveSpeed = value; } }
     public bool IsActivated { get { return isActivated; } set { isActivated = value; } }

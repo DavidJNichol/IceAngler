@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class ObjectPool : MonoBehaviour
@@ -8,8 +7,10 @@ public class ObjectPool : MonoBehaviour
 
     private static ObjectPool sharedInstance;
 
-    public List<GameObject> pooledObjects;
-    public GameObject objectToPool;
+    public List<MarineObject> pooledObjects;
+
+    public MarineObject objectToPool;
+
     public int minimumAmountOfObjects;
 
     private void Awake()
@@ -24,32 +25,33 @@ public class ObjectPool : MonoBehaviour
         }
     }
 
-    // Instant
     void Start()
     {
-        pooledObjects = new List<GameObject>();
-        GameObject tmp = new GameObject();
+        pooledObjects = new List<MarineObject>();
+        MarineObject tmp = new MarineObject();
         InstantiateRequiredObjects(tmp);
     }
 
-    public GameObject GetPooledObject()
+    public MarineObject GetPooledObject()
     {
-        for(int i = 0; i < minimumAmountOfObjects; i++)
+        if(pooledObjects.Count > 0)
         {
-            if (!pooledObjects[i].activeInHierarchy)
-                return pooledObjects[i];
+            for (int i = 0; i < minimumAmountOfObjects; i++)
+            {
+                if (!pooledObjects[i].IsActivated)
+                    return pooledObjects[i];
+            }
+            return new Shark();
         }
-        return null;
+        return new Boot();
     }
 
-    private void InstantiateRequiredObjects(GameObject gameObject)
+    private void InstantiateRequiredObjects(MarineObject gameObject)
     {
         for (int i = 0; i < minimumAmountOfObjects; i++)
         {
             gameObject = Instantiate(objectToPool);
-            gameObject.SetActive(false);
             pooledObjects.Add(gameObject);
         }
     }
-
 }
