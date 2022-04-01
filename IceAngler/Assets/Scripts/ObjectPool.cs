@@ -7,11 +7,11 @@ public class ObjectPool : MonoBehaviour
 
     private static ObjectPool sharedInstance;
 
-    public List<MarineObject> pooledObjects;
+    public List<MarineObject> objectsToPool;
 
-    public MarineObject objectToPool;
+    private List<MarineObject> pooledObjects;
 
-    public int minimumAmountOfObjects;
+    [SerializeField] private int minimumAmountOfObjects;
 
     private void Awake()
     {
@@ -28,30 +28,33 @@ public class ObjectPool : MonoBehaviour
     void Start()
     {
         pooledObjects = new List<MarineObject>();
-        MarineObject tmp = new MarineObject();
-        InstantiateRequiredObjects(tmp);
+
+        InstantiateMarineObjectsForScene();
+
+        if (minimumAmountOfObjects == 0)
+            minimumAmountOfObjects = 1;
     }
 
     public MarineObject GetPooledObject()
     {
-        if(pooledObjects.Count > 0)
-        {
-            for (int i = 0; i < minimumAmountOfObjects; i++)
-            {
-                if (!pooledObjects[i].IsActivated)
-                    return pooledObjects[i];
-            }
-            return new Shark();
-        }
-        return new Boot();
-    }
-
-    private void InstantiateRequiredObjects(MarineObject gameObject)
-    {
         for (int i = 0; i < minimumAmountOfObjects; i++)
         {
-            gameObject = Instantiate(objectToPool);
-            pooledObjects.Add(gameObject);
+            if(!pooledObjects[i].gameObject.activeInHierarchy)
+            {
+                return pooledObjects[i];
+            }
+        }
+        return null;
+    }
+
+    private void InstantiateMarineObjectsForScene()
+    {
+        MarineObject tmp;
+        for (int i = 0; i < minimumAmountOfObjects; i++)
+        {
+            tmp = Instantiate(objectsToPool[i]);
+            tmp.gameObject.SetActive(false);
+            pooledObjects.Add(tmp);
         }
     }
 }

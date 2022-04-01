@@ -4,78 +4,60 @@ using UnityEngine;
 
 public class Spawner : MonoBehaviour, ISpawner
 {
-    public Transform SpawnTransform { get { return spawnTransform; } set { spawnTransform = value; } }
+    public List<MarineObject> ObjectsInScene { get { return objectsInScene; } set { objectsInScene = value; } }
+    private List<MarineObject> objectsInScene;
+    public float SpawnOffsetY { get; set; }
+    private float offsetY;
 
-    [SerializeField] private MarineObject EelPrefab;
-    [SerializeField] private MarineObject SharkPrefab;
-    [SerializeField] private MarineObject BootPrefab;
-
-    private List<MarineObject> marineObjects;
-
-    protected Transform spawnTransform;
-    protected Vector3 spawnPosition;
-    protected Quaternion spawnRotation;
-    protected Vector3 spawnScale;
-
-    int offsetY;
-
-    // Start is called before the first frame update
     void Start()
     {
-        if(spawnTransform)
-        {
-            spawnPosition = spawnTransform.position;
-            spawnRotation = spawnTransform.rotation;
-            spawnPosition = spawnTransform.localScale;
-        }
-        else
-        {
-            spawnTransform = this.transform;
+        objectsInScene = new List<MarineObject>();
 
-            spawnPosition = spawnTransform.position;
-            spawnRotation = spawnTransform.rotation;
-            spawnPosition = spawnTransform.localScale;
-        }
-
-        marineObjects = new List<MarineObject>();
-
-        marineObjects.Add(EelPrefab);
-        marineObjects.Add(SharkPrefab);
-        marineObjects.Add(BootPrefab);
-
-        for(int i = 0; i < 3; i++)
-            SpawnPrefab(GetMarineObjectToSpawn());
+        SpawnRandomMarineObject();
+        SpawnRandomMarineObject();
+        SpawnRandomMarineObject();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        
+        RespawnObjectsIfDeactivated();
     }
-
-    private void Spawn(MarineObject prefab, int numTypes) // consider abstract base class if we need to hide things.
+    private void RespawnObjectsIfDeactivated()
     {
-        for(int i = 0; i < numTypes; i++)
+        for (int i = 0; i < objectsInScene.Count; i++)
         {
-            SpawnPrefab(prefab);
+            if (!objectsInScene[i].gameObject.activeInHierarchy)
+            {
+                objectsInScene.RemoveAt(i); // object has been deactivated, remove from current pool
+                SpawnRandomMarineObject();
+            }
         }
     }
 
-    private void SpawnPrefab(MarineObject prefab)
+    private void SpawnRandomMarineObject()
     {
+        // create temp marine obj and assign to OP singleton get pooled object
         MarineObject marineObject = ObjectPool.SharedInstance.GetPooledObject();
 
         if (marineObject != null)
         {
-            marineObject.transform.position = new Vector3(this.transform.position.x, this.transform.position.y + offsetY, this.transform.position.z);
-            marineObject.IsActivated = true;
+            // Set spawn position for object
+            marineObject.transform.position = 
+                new Vector3(this.transform.position.x, this.transform.position.y + offsetY, this.transform.position.z);
+
+            marineObject.gameObject.SetActive(true);
+
+            objectsInScene.Add(marineObject);
         }
-        offsetY -= 100;
+
+        AdjustSpawnOffset(-100);
     }
 
-    private MarineObject GetMarineObjectToSpawn()
+    private void AdjustSpawnOffset(float amount)
     {
-        int randIndex = Random.Range(0, marineObjects.Count);
-        return marineObjects[randIndex];
+        offsetY += amount;
+
+        if (offsetY < -200)
+            offsetY = 0;
     }
 }

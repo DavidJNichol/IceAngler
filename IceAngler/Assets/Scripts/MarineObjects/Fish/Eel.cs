@@ -8,7 +8,5 @@ public class Eel : Fish
     void Start()
     {
         moveSpeed = 1;
-
-        Debug.Log(IsActivated);
     }
 }

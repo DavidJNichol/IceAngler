@@ -4,5 +4,6 @@ using UnityEngine;
 
 public interface ISpawner
 {
-    Transform SpawnTransform { get; set; }
+    List<MarineObject> ObjectsInScene { get; set; }
+    float SpawnOffsetY { get; set; }
 }
