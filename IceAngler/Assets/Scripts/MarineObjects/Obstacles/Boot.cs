@@ -6,6 +6,6 @@ public class Boot : Obstacle
 {
     void Start()
     {
-        moveSpeed = 2;
+        moveSpeed = .4f;
     }
 }

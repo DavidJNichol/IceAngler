@@ -7,6 +7,10 @@ public class MarineObject : MonoBehaviour, IMarineObject
     public float MoveSpeed { get { return moveSpeed; } set { moveSpeed = value; } }
     protected float moveSpeed;
 
+    public delegate void OnDeactivateHandler();
+
+    public event OnDeactivateHandler OnDeactivate;
+
     void Start()
     {
         moveSpeed = 0;
@@ -20,13 +24,9 @@ public class MarineObject : MonoBehaviour, IMarineObject
     {
         this.transform.position = new Vector3(transform.position.x + moveSpeed, transform.position.y, transform.position.z);
     }
-    private void OnBecameInvisible()
-    {
-        Deactivate();
-    }
     private void OnTriggerEnter2D(Collider2D col)
     {
-        if (col.name == "Hook")
+        if (col.name == "Hook" || col.name == "RightBound")
         {
             Deactivate();
         }
@@ -34,5 +34,10 @@ public class MarineObject : MonoBehaviour, IMarineObject
     public void Deactivate()
     {
         gameObject.SetActive(false);
+
+        if (OnDeactivate != null)
+        {
+            OnDeactivate();
+        }
     }
 }
