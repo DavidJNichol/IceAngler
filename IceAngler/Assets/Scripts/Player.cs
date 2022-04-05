@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -11,85 +10,99 @@ public class Player : MonoBehaviour
     public int Score { get { return score; } set { score = value; } }
     private int score;
 
-    [SerializeField] private KeyCode fightFishKey;
-    [SerializeField] private Text scoreText;
-    [SerializeField] private GameObject meter;
-    private float maxMeterScaleY = 85;
+    public bool IsFishOnLine { get { return isFishOnLine; } set { isFishOnLine = value; } }
+    private bool isFishOnLine;
 
-    [HideInInspector] public bool timerIsActive;
+    public delegate void OnScoreUpdateHandler(int score);
+    public event OnScoreUpdateHandler OnScoreUpdate;
+
+    public delegate void OnMeterGainHandler(float maxMeterScaleY, int targetTimesReeled, int timesReeled);
+    public event OnMeterGainHandler OnMeterGain;
+
+    public delegate void OnMeterLossHandler(float lossAmount);
+    public event OnMeterLossHandler OnMeterLoss;
+
+    public delegate void OnMeterResetHandler();
+    public event OnMeterResetHandler OnMeterReset;
+
+    [SerializeField] private KeyCode fightFishKey;
+    private float maxMeterScaleY;
+    
     private Timer timer;
     private int timesReeled;
-    private int targetTimesReeled = 5;
+    private int targetTimesReeled;
     private Fish fishOnTheLine;
     private Collider2D hookCollider;
-    float meterLossAmount = .1f;
+    private float meterLossAmount;
 
     private void Awake()
     {
         if (sharedInstance != null && sharedInstance != this)
         {
             Destroy(this.gameObject);
+            return;
         }
-        else
-        {
-            sharedInstance = this;
-        }
+
+        sharedInstance = this;
+        DontDestroyOnLoad(this.gameObject);
     }
 
     void Start()
     {
-        timer = new Timer();
+        sharedInstance.timer = gameObject.AddComponent<Timer>();
+        sharedInstance.hookCollider = transform.GetChild(2).transform.GetChild(1).GetComponent<Collider2D>();
 
-        hookCollider = transform.GetChild(2).transform.GetChild(1).GetComponent<Collider2D>();
+        sharedInstance.targetTimesReeled = 5;
+        sharedInstance.meterLossAmount = .1f;
+        sharedInstance.maxMeterScaleY = 85;
     }
 
     void Update()
     {
-        if(timerIsActive)
+        if (sharedInstance.timer.TimerIsRunning)
         {
-            if (timesReeled < targetTimesReeled)
-            {
-                if (timer.timeRemaining == 0)
-                {
-                    if (timesReeled < targetTimesReeled)
-                        LoseFish();
-                    else
-                        CatchFish();
-                }
-
-                if (Input.GetKeyDown(fightFishKey))
-                {
-                    float meterRemaining = maxMeterScaleY - meter.transform.localScale.y;
-                    meter.transform.localScale = new Vector2(meter.transform.localScale.x, meter.transform.localScale.y + (meterRemaining/(targetTimesReeled-timesReeled+1)));
-                    timesReeled++;
-                    Debug.Log("Reeled " + timesReeled + " times. " + timer.timeRemaining + " time remaining.");
-                }
-
-                timer.RunTimer();
-                MoveMeter();
-            }
-            else
-            {
-                CatchFish();
-            }    
-        }
+            FightFish();
+        }        
     }
 
-    public void FightFish(MarineObject marineObject)
+    private void FightFish()
     {
-        if(!timerIsActive)
+        if (sharedInstance.timesReeled < sharedInstance.targetTimesReeled)
+        {
+            if (timer.TimeRemaining == 0)
+            {
+                if (timesReeled < targetTimesReeled)
+                    LoseFish();
+            }
+
+            if (Input.GetKeyDown(sharedInstance.fightFishKey))
+            {
+                OnMeterGain(sharedInstance.maxMeterScaleY, sharedInstance.targetTimesReeled, sharedInstance.timesReeled);
+                sharedInstance.timesReeled++;
+                Debug.Log("Reeled " + sharedInstance.timesReeled + " times. " + sharedInstance.timer.TimeRemaining + " time remaining.");
+            }
+
+            MoveMeter();
+        }
+        else
+            CatchFish();
+    }
+
+    public void HookFish(MarineObject marineObject)
+    {
+        if(!sharedInstance.timer.TimerIsRunning)
         {
             Fish fish = marineObject as Fish;
 
             if (fish)
             {
-                timer.SetTimerDuration(5);
-                targetTimesReeled = fish.Durability;
-                timerIsActive = true;
-                fishOnTheLine = fish;
-                hookCollider.enabled = false;
-
-                fishOnTheLine.gameObject.AddComponent<Rigidbody2D>();
+                sharedInstance.timer.SetTimerDuration(5);
+                sharedInstance.targetTimesReeled = fish.Durability;
+                sharedInstance.timer.StartTimer();
+                sharedInstance.fishOnTheLine = fish;
+                sharedInstance.hookCollider.enabled = false;
+                sharedInstance.isFishOnLine = true;
+                sharedInstance.fishOnTheLine.gameObject.AddComponent<Rigidbody2D>();
             }
             else
             {
@@ -106,41 +119,35 @@ public class Player : MonoBehaviour
 
     private void CatchFish()
     {
-        Debug.Log("Fish caught!: " + fishOnTheLine.name);
-        timesReeled = 0; // qte button reset
-        timerIsActive = false;
-        fishOnTheLine.Deactivate(); // make fish disappear
-        score++;
-        scoreText.text = score.ToString(); // set UI
-        hookCollider.enabled = true;
-        fishOnTheLine.IsOnHook = false; // unties fish y pos to hook y pos
-
-        Destroy(fishOnTheLine.GetComponent<Rigidbody2D>());
-
-        meter.transform.localScale = new Vector2(meter.transform.localScale.x, 0); // reset meter    
+        Debug.Log("Fish caught!: " + sharedInstance.fishOnTheLine.name);
+        EndFight();
+        sharedInstance.fishOnTheLine.Deactivate(); // make fish disappear
+        sharedInstance.score++;
+        sharedInstance.OnScoreUpdate(sharedInstance.score); // fire delegate to set UI text
     }
 
     public void LoseFish()
     {
-        Debug.Log("Fish lost!: " + fishOnTheLine.name);
-        timesReeled = 0;
-        timerIsActive = false; // deactivate timer
-
-        fishOnTheLine.CanMove = true; // resume fish movement
-        fishOnTheLine.IsOnHook = false; // fish movement no longer tied to hook
-        fishOnTheLine.CanCollideWithHook = false; // this fish gets immunity
-        hookCollider.enabled = true;
-
-        Destroy(fishOnTheLine.GetComponent<Rigidbody2D>());
-
-        meter.transform.localScale = new Vector2(meter.transform.localScale.x, 0); // reset meter
+        Debug.Log("Fish lost!: " + sharedInstance.fishOnTheLine.name);
+        EndFight();
+        sharedInstance.fishOnTheLine.CanMove = true; // resume fish movement
+        sharedInstance.fishOnTheLine.CanCollideWithHook = false; // this fish gets immunity  
     }
 
     private void MoveMeter()
     {
-        if(meter.transform.localScale.y > 0)
-        {
-            meter.transform.localScale = new Vector2(meter.transform.localScale.x, meter.transform.localScale.y - meterLossAmount);
-        }
+        sharedInstance.OnMeterLoss(meterLossAmount);
+    }
+
+    private void EndFight()
+    {
+        sharedInstance.timesReeled = 0; // qte button reset
+        sharedInstance.timer.TimerIsRunning = false; // deactivate timer
+        sharedInstance.hookCollider.enabled = true;
+        sharedInstance.isFishOnLine = false;
+        sharedInstance.fishOnTheLine.IsOnHook = false; // fish movement no longer tied to hook
+        Destroy(sharedInstance.fishOnTheLine.GetComponent<Rigidbody2D>());
+
+        sharedInstance.OnMeterReset();
     }
 }

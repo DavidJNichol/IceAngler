@@ -18,30 +18,30 @@ public class ObjectPool : MonoBehaviour
         if (sharedInstance != null && sharedInstance != this)
         {
             Destroy(this.gameObject);
+            return;
         }
-        else
-        {
-            sharedInstance = this;
-        }
+
+        sharedInstance = this;
+        DontDestroyOnLoad(this.gameObject); // persist across scenes
     }
 
     void Start()
     {
-        pooledObjects = new List<MarineObject>();
+        sharedInstance.pooledObjects = new List<MarineObject>();
 
         InstantiateMarineObjectsForScene();
 
-        if (minimumAmountOfObjects == 0)
-            minimumAmountOfObjects = 1;
+        if (sharedInstance.minimumAmountOfObjects == 0)
+            sharedInstance.minimumAmountOfObjects = 1;
     }
 
     public MarineObject GetPooledObject()
     {
-        for (int i = 0; i < minimumAmountOfObjects; i++)
+        for (int i = 0; i < sharedInstance.minimumAmountOfObjects; i++)
         {
-            if(!pooledObjects[i].gameObject.activeInHierarchy)
+            if(!sharedInstance.pooledObjects[i].gameObject.activeInHierarchy)
             {
-                return pooledObjects[i];
+                return sharedInstance.pooledObjects[i];
             }
         }
         return null;
@@ -50,11 +50,11 @@ public class ObjectPool : MonoBehaviour
     private void InstantiateMarineObjectsForScene()
     {
         MarineObject tmp;
-        for (int i = 0; i < minimumAmountOfObjects; i++)
+        for (int i = 0; i < sharedInstance.minimumAmountOfObjects; i++)
         {
-            tmp = Instantiate(objectsToPool[i]);
+            tmp = Instantiate(sharedInstance.objectsToPool[i]);
             tmp.gameObject.SetActive(false);
-            pooledObjects.Add(tmp);
+            sharedInstance.pooledObjects.Add(tmp);
         }
     }
 }

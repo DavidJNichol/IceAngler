@@ -12,11 +12,11 @@ public class Boot : Obstacle
 
     protected override void OnTriggerEnter2D(Collider2D col)
     {
-        if (col.gameObject.GetComponent<MarineObject>())
+        if (col.gameObject.GetComponent<MarineObject>()) // if it's a marine object
         {
-            if (Player.SharedInstance.timerIsActive)
+            if (Player.SharedInstance)
             {
-                Player.SharedInstance.LoseFish();
+                Player.SharedInstance.LoseFish(); 
             }
         }
         if (col.name == "RightBound")

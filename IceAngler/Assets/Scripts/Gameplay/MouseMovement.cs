@@ -21,7 +21,7 @@ public class MouseMovement : MonoBehaviour
     }
     private void Update()
     {
-        mouseY = mainCamera.ScreenToViewportPoint(Input.mousePosition).y/2;
+        mouseY = mainCamera.ScreenToWorldPoint(Input.mousePosition).y*2;
     }
     private void FixedUpdate()
     {

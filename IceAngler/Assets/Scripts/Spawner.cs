@@ -46,7 +46,7 @@ public class Spawner : MonoBehaviour, ISpawner
             objectsInScene.Add(marineObject);
 
             marineObject.OnDeactivate += RespawnObjectsIfDeactivated; // bind respawn delegate
-            marineObject.OnHookCollision += Player.SharedInstance.FightFish; // bind fighting delegate
+            marineObject.OnHookCollision += Player.SharedInstance.HookFish; // bind fighting delegate
 
             marineObject.ResetValuesOnSpawn();
 

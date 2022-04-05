@@ -37,14 +37,12 @@ public class MarineObject : MonoBehaviour, IMarineObject
     protected void FixedUpdate()
     {
         if (isOnHook)
-            Move();
+            FollowHookPosition();
     }
     public void Move()
     {
         if(canMove)
             this.transform.position = new Vector3(transform.position.x + moveSpeed, transform.position.y, transform.position.z);
-        else if (isOnHook)
-            FollowHookPosition();
     }
 
     public void Deactivate()
@@ -66,23 +64,20 @@ public class MarineObject : MonoBehaviour, IMarineObject
 
     private void FollowHookPosition()
     {
-        this.transform.position = new Vector2(this.transform.position.x, hookCollider.transform.position.y);
+        this.transform.position = new Vector3(this.transform.position.x, hookCollider.transform.position.y, this.transform.position.z);
     }
 
     protected virtual void OnTriggerEnter2D(Collider2D col)
     {
         if (col.name == "Hook")
         {
-            if(col.gameObject.layer == 0)
+            if (canCollideWithHook)
             {
-                if (canCollideWithHook)
-                {
-                    OnHookCollision(this); // player qte event fire
-                    canMove = false;
-                    isOnHook = true;
-                    hookCollider = col;
-                }
-            }          
+                OnHookCollision(this); // player qte event fire
+                canMove = false;
+                isOnHook = true;
+                hookCollider = col;
+            }
         }
         else if (col.name == "RightBound")
         {
