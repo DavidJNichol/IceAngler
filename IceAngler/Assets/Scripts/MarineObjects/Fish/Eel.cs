@@ -5,8 +5,10 @@ using UnityEngine;
 public class Eel : Fish
 {
     // Start is called before the first frame update
-    void Start()
+    protected override void Start()
     {
-        moveSpeed = .6f;
+        base.Start();
+        moveSpeed = .85f;
+        durability = 6;
     }
 }

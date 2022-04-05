@@ -5,27 +5,23 @@ using UnityEngine;
 
 public class MouseMovement : MonoBehaviour
 {
-    float mouseY;
+    [SerializeField] private GameObject hook;
 
-    public float speed;
-
-    public GameObject hook;
-
-    public Camera mainCamera;
+    [SerializeField] private Camera mainCamera;
 
     private float lastY;
+    private float mouseY;
 
     // Start is called before the first frame update
     void Start()
     {
         Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         Cursor.lockState = CursorLockMode.Confined;
-        Cursor.visible = false;
-        speed /= 100;
+        //Cursor.visible = false;
     }
     private void Update()
     {
-        mouseY = mainCamera.ScreenToWorldPoint(Input.mousePosition).y/2;
+        mouseY = mainCamera.ScreenToViewportPoint(Input.mousePosition).y/2;
     }
     private void FixedUpdate()
     {

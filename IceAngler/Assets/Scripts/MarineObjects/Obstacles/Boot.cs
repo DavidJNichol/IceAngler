@@ -4,8 +4,24 @@ using UnityEngine;
 
 public class Boot : Obstacle
 {
-    void Start()
+    protected override void Start()
     {
-        moveSpeed = .4f;
+        base.Start();
+        moveSpeed = .8f;
+    }
+
+    protected override void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.gameObject.GetComponent<MarineObject>())
+        {
+            if (Player.SharedInstance.timerIsActive)
+            {
+                Player.SharedInstance.LoseFish();
+            }
+        }
+        if (col.name == "RightBound")
+        {
+            Deactivate(); // spawn new delegate fire
+        }
     }
 }

@@ -4,4 +4,5 @@ using UnityEngine;
 
 public interface ICatchable
 {
+    int Durability { get; set; }
 }

@@ -6,31 +6,47 @@ public class MarineObject : MonoBehaviour, IMarineObject
 {
     public float MoveSpeed { get { return moveSpeed; } set { moveSpeed = value; } }
     protected float moveSpeed;
+    public bool CanMove { get { return canMove; } set { canMove = value; } }
+    protected bool canMove;
+    public float SpawnOffsetY { get { return spawnOffsetY; } set { spawnOffsetY = value; } }
+    protected float spawnOffsetY;
+    public bool CanCollideWithHook { get { return canCollideWithHook; } set { canCollideWithHook = value; } }
+    protected bool canCollideWithHook;
+    public  bool IsOnHook { get { return isOnHook; } set { isOnHook = value; } }
+    protected bool isOnHook;
+
+    protected Collider2D hookCollider;
 
     public delegate void OnDeactivateHandler();
+    public event OnDeactivateHandler OnDeactivate; // for spawning new fish
+    public delegate void OnHookCollisionHandler(MarineObject marineObject);
+    public event OnHookCollisionHandler OnHookCollision; // for QTE
 
-    public event OnDeactivateHandler OnDeactivate;
-
-    void Start()
+    protected virtual void Start()
     {
         moveSpeed = 0;
+        canMove = true;
+        canCollideWithHook = true;
     }
 
     protected void Update()
     {
-        Move();
+        if(!isOnHook)
+            Move();
+    }
+    protected void FixedUpdate()
+    {
+        if (isOnHook)
+            Move();
     }
     public void Move()
     {
-        this.transform.position = new Vector3(transform.position.x + moveSpeed, transform.position.y, transform.position.z);
+        if(canMove)
+            this.transform.position = new Vector3(transform.position.x + moveSpeed, transform.position.y, transform.position.z);
+        else if (isOnHook)
+            FollowHookPosition();
     }
-    private void OnTriggerEnter2D(Collider2D col)
-    {
-        if (col.name == "Hook" || col.name == "RightBound")
-        {
-            Deactivate();
-        }
-    }
+
     public void Deactivate()
     {
         gameObject.SetActive(false);
@@ -38,6 +54,39 @@ public class MarineObject : MonoBehaviour, IMarineObject
         if (OnDeactivate != null)
         {
             OnDeactivate();
+        }
+    }
+
+    public void ResetValuesOnSpawn()
+    {
+        gameObject.SetActive(true);
+        canMove = true;
+        canCollideWithHook = true;
+    }
+
+    private void FollowHookPosition()
+    {
+        this.transform.position = new Vector2(this.transform.position.x, hookCollider.transform.position.y);
+    }
+
+    protected virtual void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.name == "Hook")
+        {
+            if(col.gameObject.layer == 0)
+            {
+                if (canCollideWithHook)
+                {
+                    OnHookCollision(this); // player qte event fire
+                    canMove = false;
+                    isOnHook = true;
+                    hookCollider = col;
+                }
+            }          
+        }
+        else if (col.name == "RightBound")
+        {
+            Deactivate(); // spawn new delegate fire
         }
     }
 }

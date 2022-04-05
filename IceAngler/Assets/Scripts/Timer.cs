@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Timer
 {
-    public float timeRemaining = 3;
+    public float timeRemaining = 5;
 
     public void SetTimerDuration(float duration)
     {

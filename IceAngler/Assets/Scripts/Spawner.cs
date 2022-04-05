@@ -16,15 +16,7 @@ public class Spawner : MonoBehaviour, ISpawner
         spawnYCoordinates = new List<float>();
         objectsInScene = new List<MarineObject>();
 
-        spawnYCoordinates.Add(112);
-        spawnYCoordinates.Add(90);
-        spawnYCoordinates.Add(60);
-        spawnYCoordinates.Add(30);
-        spawnYCoordinates.Add(0);
-        spawnYCoordinates.Add(-30);
-        spawnYCoordinates.Add(-60);
-        spawnYCoordinates.Add(-90);
-        spawnYCoordinates.Add(-110);
+        InitializeSpawnOffsetList();
 
         SpawnRandomMarineObject();
         SpawnRandomMarineObject();
@@ -37,6 +29,7 @@ public class Spawner : MonoBehaviour, ISpawner
         {
             if (!objectsInScene[i].gameObject.activeInHierarchy)
             {
+                objectsInScene[i].OnDeactivate -= RespawnObjectsIfDeactivated; // unbind delegate
                 objectsInScene.RemoveAt(i); // object has been deactivated, remove from current pool
                 SpawnRandomMarineObject();
             }
@@ -49,18 +42,31 @@ public class Spawner : MonoBehaviour, ISpawner
         MarineObject marineObject = ObjectPool.SharedInstance.GetPooledObject();
 
         if (marineObject != null)
-        {
-            // Set spawn position for object
-            marineObject.transform.position =
-                new Vector3(this.transform.position.x, this.transform.position.y + offsetY, this.transform.position.z);
-
+        {        
             objectsInScene.Add(marineObject);
 
-            marineObject.OnDeactivate += RespawnObjectsIfDeactivated;
+            marineObject.OnDeactivate += RespawnObjectsIfDeactivated; // bind respawn delegate
+            marineObject.OnHookCollision += Player.SharedInstance.FightFish; // bind fighting delegate
 
-            marineObject.gameObject.SetActive(true);
+            marineObject.ResetValuesOnSpawn();
 
-            AdjustSpawnOffset(spawnYCoordinates[Random.Range(0, spawnYCoordinates.Count)]);
+            if (spawnYCoordinates.Count == 0)
+            {
+                InitializeSpawnOffsetList();
+            }
+
+            int randIndex = Random.Range(0, spawnYCoordinates.Count);
+
+            AdjustSpawnOffset(spawnYCoordinates[randIndex]);
+
+            //Debug.LogError("Random Index: " + randIndex + "spawn offset: " + (spawnYCoordinates[randIndex]) + "total offset: " + (this.transform.position.y + offsetY) + " for " + marineObject.name);
+
+            // Set spawn position for object
+            marineObject.transform.position =
+                new Vector3(this.transform.position.x, 
+                this.transform.position.y + offsetY, this.transform.position.z);
+
+            spawnYCoordinates.RemoveAt(randIndex);
         }
     }
 
@@ -70,5 +76,18 @@ public class Spawner : MonoBehaviour, ISpawner
 
         if (offsetY < -110 || offsetY > 112)
             offsetY = 0;
+    }
+
+    private void InitializeSpawnOffsetList()
+    {
+        spawnYCoordinates.Add(112);
+        spawnYCoordinates.Add(90);
+        spawnYCoordinates.Add(60);
+        spawnYCoordinates.Add(30);
+        spawnYCoordinates.Add(0);
+        spawnYCoordinates.Add(-30);
+        spawnYCoordinates.Add(-60);
+        spawnYCoordinates.Add(-90);
+        spawnYCoordinates.Add(-110);
     }
 }
