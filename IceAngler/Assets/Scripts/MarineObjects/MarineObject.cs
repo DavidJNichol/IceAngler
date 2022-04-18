@@ -4,16 +4,18 @@ using UnityEngine;
 
 public class MarineObject : MonoBehaviour, IMarineObject
 {
-    public float MoveSpeed { get { return moveSpeed; } set { moveSpeed = value; } }
+    public float MoveSpeed { get { return moveSpeed; }}
     protected float moveSpeed;
     public bool CanMove { get { return canMove; } set { canMove = value; } }
     protected bool canMove;
-    public float SpawnOffsetY { get { return spawnOffsetY; } set { spawnOffsetY = value; } }
-    protected float spawnOffsetY;
     public bool CanCollideWithHook { get { return canCollideWithHook; } set { canCollideWithHook = value; } }
     protected bool canCollideWithHook;
+    public float SpawnOffsetY { get { return spawnOffsetY; }}
+    protected float spawnOffsetY;
     public  bool IsOnHook { get { return isOnHook; } set { isOnHook = value; } }
     protected bool isOnHook;
+    public Rigidbody2D Rigidbody { get { return rb; } set { rb = value; } }
+    protected Rigidbody2D rb;
 
     protected Collider2D hookCollider;
 
@@ -27,21 +29,19 @@ public class MarineObject : MonoBehaviour, IMarineObject
         moveSpeed = 0;
         canMove = true;
         canCollideWithHook = true;
+        rb = GetComponent<Rigidbody2D>();
     }
 
     protected void Update()
     {
-        if(!isOnHook)
-            Move();
-    }
-    protected void FixedUpdate()
-    {
         if (isOnHook)
             FollowHookPosition();
+        else
+            Move();
     }
     public void Move()
     {
-        if(canMove)
+        if (canMove)
             this.transform.position = new Vector3(transform.position.x + moveSpeed, transform.position.y, transform.position.z);
     }
 
@@ -64,12 +64,13 @@ public class MarineObject : MonoBehaviour, IMarineObject
 
     private void FollowHookPosition()
     {
-        this.transform.position = new Vector3(this.transform.position.x, hookCollider.transform.position.y, this.transform.position.z);
+        if (hookCollider)
+            this.transform.position = new Vector3(this.transform.position.x, hookCollider.transform.position.y, this.transform.position.z);
     }
 
     protected virtual void OnTriggerEnter2D(Collider2D col)
     {
-        if (col.name == "Hook")
+        if (col.CompareTag("Hook"))
         {
             if (canCollideWithHook)
             {
@@ -79,7 +80,7 @@ public class MarineObject : MonoBehaviour, IMarineObject
                 hookCollider = col;
             }
         }
-        else if (col.name == "RightBound")
+        else if (col.CompareTag("RightBound"))
         {
             Deactivate(); // spawn new delegate fire
         }

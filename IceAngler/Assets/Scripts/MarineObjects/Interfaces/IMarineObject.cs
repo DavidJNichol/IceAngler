@@ -4,13 +4,12 @@ using UnityEngine;
 
 public interface IMarineObject
 {
-    float MoveSpeed { get; set; }
-
+    float MoveSpeed { get; }
     bool CanMove { get; set; }
-
-    float SpawnOffsetY { get; set; }
-
+    bool CanCollideWithHook { get; set; }
+    bool IsOnHook { get; set; }
+    float SpawnOffsetY { get; }
+    Rigidbody2D Rigidbody { get; }
     void Move();
-
     void Deactivate();
 }

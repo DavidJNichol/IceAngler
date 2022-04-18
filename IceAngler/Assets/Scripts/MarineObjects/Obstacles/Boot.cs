@@ -19,7 +19,7 @@ public class Boot : Obstacle
                 Player.SharedInstance.LoseFish(); 
             }
         }
-        if (col.name == "RightBound")
+        if (col.CompareTag("RightBound"))
         {
             Deactivate(); // spawn new delegate fire
         }
